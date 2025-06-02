@@ -1,67 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
-import Cabecalho from "@/componentes/Cabecalho";
-import ModalTarefa from "@/componentes/ModalTarefa";
-import { TarefaInterface, dados } from "@/data/index";
-import Tarefas from "@/componentes/Tarefas";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-interface TarefaProps {
-	titulo: string;
-	concluido?: boolean;
+interface TarefaInterface {
+    id: number;
+    todo: string;
+    completed: boolean;
 }
 
-const Tarefa: React.FC<TarefaProps> = ({ titulo, concluido }) => {
-	const [estaConcluido, setEstaConcluido] = useState(concluido);
+export default function TarefasPage() {
+    const [tarefas, setTarefas] = useState<TarefaInterface[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-	const classeCard = `p-3 mb-3 rounded-lg shadow-md hover:cursor-pointer hover:border ${
-		estaConcluido
-			? "bg-gray-800 hover:border-gray-800"
-			: "bg-gray-400 hover:border-gray-400"
-	}`;
+    useEffect(() => {
+        const fetchTarefas = async () => {
+            try {
+                const response = await axios.get("https://dummyjson.com/todos");
+                setTarefas(response.data.todos);
+            } catch (err) {
+                setError("Erro ao buscar tarefas");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-	const classeCorDoTexto = estaConcluido ? "text-amber-50" : "";
+        fetchTarefas();
+    }, []);
 
-	const escutarClique = () => {
-		console.log(`A tarefa '${titulo}' foi clicada!`);
-		setEstaConcluido(!estaConcluido);
-	};
-
-	return (
-		<div className={classeCard} onClick={() => escutarClique()}>
-			<h3 className={`text-xl font-bold ${classeCorDoTexto}`}>{titulo}</h3>
-			<p className={`text-sm ${classeCorDoTexto}`}>
-				{estaConcluido ? "Concluída" : "Pendente"}
-			</p>
-		</div>
-	);
-};
-
-interface TarefasProps {
-	dados: TarefaInterface[];
-}
-
-
-
-const Home = () => {
-    const [tarefas, setTarefas] = useState<TarefaInterface[]>(dados);
-    const [modalAberto, setModalAberto] = useState(false);
-
-    const adicionarTarefa = (titulo: string) => {
-        const novaTarefa = { id: tarefas.length + 1, titulo, concluido: false };
-        setTarefas([...tarefas, novaTarefa]);
-    };
+    if (loading) return <p>Carregando tarefas...</p>;
+    if (error) return <p className="text-red-500">{error}</p>;
 
     return (
         <div className="container mx-auto p-4">
-            <Cabecalho />
-            <button onClick={() => setModalAberto(true)} className="bg-blue-500 text-white px-4 py-2 rounded mb-4">
-                Nova Tarefa
-            </button>
-            {modalAberto && <ModalTarefa fecharModal={() => setModalAberto(false)} adicionarTarefa={adicionarTarefa} />}
-            <Tarefas dados={tarefas} />
+            <h1 className="text-3xl font-bold">Lista de Tarefas</h1>
+            <ul>
+                {tarefas.map((tarefa) => (
+                    <li key={tarefa.id} className="p-2 border-b">
+                        <input type="checkbox" checked={tarefa.completed} readOnly />
+                        <span className={tarefa.completed ? "line-through" : ""}>{tarefa.todo}</span>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
-};
-
-export default Home;
+}
