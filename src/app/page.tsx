@@ -60,6 +60,7 @@ const Home = () => {
             </button>
             {modalAberto && <ModalTarefa fecharModal={() => setModalAberto(false)} adicionarTarefa={adicionarTarefa} />}
             <Tarefas dados={tarefas} />
+			<a href="/tarefas" className="text-blue-500 underline">Ver lista de tarefas</a>
         </div>
     );
 };
